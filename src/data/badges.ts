@@ -3,7 +3,7 @@ import type { Badge } from '../types'
 export const PHASES: Record<Badge['phase'], { title: string; subtitle: string; accent: string }> = {
   1: { title: 'Quick wins', subtitle: 'Do all six today', accent: 'emerald' },
   2: { title: '7-day streaks', subtitle: 'Start on day 1', accent: 'yellow' },
-  3: { title: '4-week activities', subtitle: 'Once per week, 4 weeks in a row', accent: 'orange' },
+  3: { title: '4-week streaks', subtitle: 'Once per week, 4 weeks in a row', accent: 'orange' },
   4: { title: '30-day streaks', subtitle: 'Keep the daily routine going', accent: 'sky' },
   5: { title: 'Community', subtitle: 'Other people must engage with you', accent: 'rose' },
   6: { title: '90-day streaks', subtitle: 'Cannot be compressed. Start today.', accent: 'violet' },

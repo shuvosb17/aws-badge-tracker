@@ -1,53 +1,79 @@
-import { useEffect, useMemo, useState } from 'react'
-import { BadgeBoard } from './components/BadgeBoard'
+import confetti from 'canvas-confetti'
+import { CheckSquare, Map as MapIcon, Settings, Share2, Wrench } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { BadgeMedallion } from './components/BadgeMedallion'
 import { ContentPanel } from './components/ContentPanel'
-import { Heatmap } from './components/Heatmap'
-import { Hero } from './components/Hero'
+import { JourneyView } from './components/JourneyView'
+import { Onboarding } from './components/Onboarding'
 import { SettingsPanel } from './components/SettingsPanel'
-import { TodayPanel } from './components/TodayPanel'
-import { UpNext } from './components/UpNext'
-import { Button, Card, CardTitle } from './components/ui'
+import { TodayView } from './components/TodayView'
+import type { Update } from './lib/actions'
 import { cx } from './lib/cx'
 import { todayKey } from './lib/date'
+import { buildMissions } from './lib/missions'
 import { computeProgress, dailyStreak, milestoneStatus } from './lib/progress'
 import { usePersistentState } from './lib/storage'
+import type { BadgeProgress } from './types'
 
 const TABS = [
-  { id: 'dashboard', label: 'Dashboard' },
-  { id: 'badges', label: 'All 21 badges' },
-  { id: 'content', label: 'Content' },
-  { id: 'settings', label: 'Settings' },
+  { id: 'today', label: 'Today', icon: CheckSquare },
+  { id: 'journey', label: 'Journey', icon: MapIcon },
+  { id: 'toolkit', label: 'Toolkit', icon: Wrench },
+  { id: 'settings', label: 'Settings', icon: Settings },
 ] as const
 
 type Tab = (typeof TABS)[number]['id']
 
-const ROUTINE = [
-  'Open builder.aws.com and read one article',
-  'Like it (or another post you found useful)',
-  'Leave one comment that ends with a real question',
-  'Mondays: vote on a Wish and publish your weekly article',
-  'Check in here so your streak map stays accurate',
-]
+function tabFromHash(): Tab {
+  const h = window.location.hash.slice(1)
+  return TABS.some((t) => t.id === h) ? (h as Tab) : 'today'
+}
 
 export default function App() {
   const [state, setState] = usePersistentState()
   const [, setNow] = useState(() => Date.now())
-  const [tab, setTab] = useState<Tab>('dashboard')
+  const [tab, setTab] = useState<Tab>(tabFromHash)
   const [copied, setCopied] = useState(false)
+  const [setupOpen, setSetupOpen] = useState(false)
+  const [unlocked, setUnlocked] = useState<BadgeProgress | null>(null)
+  const toastTimer = useRef<number | undefined>(undefined)
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 30_000)
     return () => clearInterval(id)
   }, [])
 
-  const today = todayKey(state.dayBoundary)
-  const [picked, setPicked] = useState<string | null>(null)
-  const selected = picked ?? today
-  const setSelected = (d: string) => setPicked(d === today ? null : d)
+  useEffect(() => {
+    const onHash = () => setTab(tabFromHash())
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
 
-  const progress = useMemo(() => computeProgress(state, today), [state, today])
-  const milestones = useMemo(() => milestoneStatus(progress), [progress])
+  const today = todayKey(state.dayBoundary)
+  const progress = computeProgress(state, today)
+  const milestones = milestoneStatus(progress)
+  const missions = buildMissions(state, progress, today)
   const earned = progress.filter((p) => p.earned).length
+
+  const update: Update = (fn) => {
+    const next = fn(state)
+    const before = new Set(progress.filter((p) => p.earned).map((p) => p.badge.id))
+    const newly = computeProgress(next, todayKey(next.dayBoundary)).filter((p) => p.earned && !before.has(p.badge.id))
+    setState(next)
+    if (newly.length > 0 && next.onboarded && state.onboarded) {
+      confetti({ particleCount: 140, spread: 80, origin: { y: 0.7 }, colors: ['#ff9900', '#fcd34d', '#34d399', '#a78bfa'] })
+      setUnlocked(newly[0])
+      window.clearTimeout(toastTimer.current)
+      toastTimer.current = window.setTimeout(() => setUnlocked(null), 4000)
+    }
+  }
+
+  const go = (t: Tab) => {
+    if (t !== 'today') window.location.hash = t
+    else if (window.location.hash) history.pushState(null, '', window.location.pathname)
+    setTab(t)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   const share = async () => {
     const streak = Math.min(...(['visit', 'like', 'comment'] as const).map((m) => dailyStreak(state, m, today).current))
@@ -56,7 +82,7 @@ export default function App() {
       `🏅 ${earned}/21 AWS Builder Center badges earned`,
       `🔥 ${streak}-day streak`,
       next ? `🎯 Next reward: ${next.reward}` : '🏆 All 21 badges done. $100 AWS certification voucher unlocked!',
-      `Tracking my progress with ${window.location.origin}`,
+      `Tracking my journey with ${window.location.origin}`,
     ].join('\n')
     await navigator.clipboard.writeText(text)
     setCopied(true)
@@ -64,100 +90,128 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen">
-      <header className="sticky top-0 z-20 border-b border-white/10 bg-ink/80 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3">
-          <div className="flex items-center gap-2.5">
-            <img src="/favicon.svg" alt="" className="h-8 w-8" />
-            <div className="leading-tight">
-              <div className="font-bold">AWS Badge Tracker</div>
-              <div className="text-[11px] text-slate-400">21 badges → $100 exam voucher</div>
+    <div className="min-h-screen pb-24 sm:pb-0">
+      <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-ink/75 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4">
+          <button type="button" onClick={() => go('today')} className="flex items-center gap-2.5">
+            <img src="/favicon.svg" alt="" className="h-9 w-9" />
+            <div className="text-left leading-tight">
+              <div className="font-extrabold tracking-tight">AWS Badge Tracker</div>
+              <div className="text-[11px] font-medium text-slate-400">AWS Builder Center tracker</div>
             </div>
-          </div>
-          <nav className="order-3 -mx-1 flex w-full gap-1 overflow-x-auto sm:order-none sm:ml-6 sm:w-auto">
+          </button>
+
+          <nav className="ml-6 hidden items-center gap-1 rounded-2xl bg-white/[0.04] p-1 ring-1 ring-white/[0.06] sm:flex">
             {TABS.map((t) => (
               <button
                 key={t.id}
                 type="button"
-                onClick={() => setTab(t.id)}
+                onClick={() => go(t.id)}
                 className={cx(
-                  'whitespace-nowrap rounded-lg px-3 py-1.5 text-sm transition',
-                  tab === t.id ? 'bg-white/10 font-semibold text-white' : 'text-slate-400 hover:text-white',
+                  'flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition',
+                  tab === t.id ? 'bg-white/[0.1] text-white shadow' : 'text-slate-400 hover:text-white',
                 )}
               >
-                {t.label}
+                <t.icon size={16} /> {t.label}
               </button>
             ))}
           </nav>
+
           <div className="ml-auto flex items-center gap-2">
-            <span className="hidden rounded-full bg-aws/15 px-2.5 py-1 text-xs font-semibold text-aws sm:inline">{earned}/21</span>
-            <Button onClick={share} className="text-xs">
-              {copied ? '✓ Copied' : 'Share progress'}
-            </Button>
+            <span className="rounded-full bg-aws/15 px-3 py-1.5 text-xs font-extrabold text-aws tabular-nums">{earned}/21</span>
+            <button
+              type="button"
+              onClick={share}
+              className="flex items-center gap-1.5 rounded-xl bg-white/[0.06] px-3 py-2 text-xs font-semibold ring-1 ring-white/10 transition hover:bg-white/[0.1]"
+            >
+              <Share2 size={14} /> <span className="hidden sm:inline">{copied ? 'Copied!' : 'Share'}</span>
+              <span className="sm:hidden">{copied ? '✓' : ''}</span>
+            </button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl space-y-6 px-4 py-6">
-        {tab === 'dashboard' && (
-          <>
-            <Hero state={state} update={setState} today={today} earned={earned} milestones={milestones} />
-            <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-              <TodayPanel state={state} update={setState} today={today} selected={selected} setSelected={setSelected} />
-              <div className="space-y-6">
-                <UpNext progress={progress} today={today} />
-                <Card>
-                  <CardTitle>Your 10-minute daily routine</CardTitle>
-                  <ol className="space-y-2 text-sm text-slate-300">
-                    {ROUTINE.map((r, i) => (
-                      <li key={r} className="flex gap-3">
-                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-aws/15 text-[11px] font-bold text-aws">
-                          {i + 1}
-                        </span>
-                        {r}
-                      </li>
-                    ))}
-                  </ol>
-                </Card>
-              </div>
-            </div>
-            <Heatmap state={state} today={today} selected={selected} onSelect={setSelected} />
-          </>
+      <main key={tab} className="animate-fade mx-auto max-w-6xl px-4 py-6 sm:py-10">
+        {tab === 'today' && (
+          <TodayView
+            state={state}
+            update={update}
+            today={today}
+            progress={progress}
+            milestones={milestones}
+            missions={missions}
+            onOpenJourney={() => go('journey')}
+          />
         )}
-        {tab === 'badges' && <BadgeBoard state={state} update={setState} progress={progress} today={today} />}
-        {tab === 'content' && <ContentPanel state={state} update={setState} today={today} />}
-        {tab === 'settings' && <SettingsPanel state={state} update={setState} today={today} />}
+        {tab === 'journey' && <JourneyView state={state} update={update} today={today} progress={progress} milestones={milestones} />}
+        {tab === 'toolkit' && <ContentPanel state={state} update={update} today={today} />}
+        {tab === 'settings' && <SettingsPanel state={state} update={update} today={today} onRerunSetup={() => setSetupOpen(true)} />}
       </main>
 
-      <footer className="mx-auto max-w-6xl px-4 pb-10 pt-4 text-xs text-slate-500">
-        <p>
-          Rewards for verified students: 7 badges = $10 AWS Credits · 14 badges = +$20 AWS Credits · 21 badges = $100 exam voucher
-          for AWS Certified Cloud Practitioner or AI Practitioner (not cash; code issued within 8 business days of claiming, valid
-          6 months from the claim date). Based on the{' '}
-          <a
-            className="text-slate-400 underline hover:text-aws"
-            href="https://builder.aws.com/content/3JJRhS6Hfh0Sf2ssvZLpQKai0xY/the-complete-roadmap-to-all-21-aws-builder-center-badges"
-            target="_blank"
-            rel="noreferrer"
-          >
-            AWS Builder Center 21-badge roadmap
-          </a>{' '}
-          and{' '}
-          <a
-            className="text-slate-400 underline hover:text-aws"
-            href="https://builder.aws.com/content/3I1qkUtKhwU6K1VaGkfYRwtbz3o"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Student Rewards announcement
-          </a>{' '}
-          and the{' '}
-          <a className="text-slate-400 underline hover:text-aws" href="https://builder.aws.com/faq" target="_blank" rel="noreferrer">
-            Builder Center FAQ
-          </a>
-          . Unofficial tool, not affiliated with AWS. Always confirm badge status on your Builder Center profile.
-        </p>
+      <footer className="mx-auto max-w-6xl px-4 pb-10 text-xs leading-relaxed text-slate-500">
+        Rewards for verified students: 7 badges = $10 AWS Credits · 14 badges = +$20 · 21 badges = $100 exam voucher for AWS Certified
+        Cloud Practitioner or AI Practitioner (not cash; valid 6 months from claiming). Sources:{' '}
+        <a className="underline hover:text-aws" href="https://builder.aws.com/faq" target="_blank" rel="noreferrer">
+          Builder Center FAQ
+        </a>
+        ,{' '}
+        <a
+          className="underline hover:text-aws"
+          href="https://builder.aws.com/content/3I1qkUtKhwU6K1VaGkfYRwtbz3o"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Student Rewards announcement
+        </a>
+        ,{' '}
+        <a
+          className="underline hover:text-aws"
+          href="https://builder.aws.com/content/3IXWU6hpqCLsaXPfPr97QndERO0/a-complete-breakdown-of-all-21-aws-builder-center-badges"
+          target="_blank"
+          rel="noreferrer"
+        >
+          21-badge breakdown
+        </a>
+        . Unofficial tool, not affiliated with AWS. Your Builder Center profile is the source of truth.
       </footer>
+
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/[0.06] bg-ink/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl sm:hidden">
+        <div className="grid grid-cols-4">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => go(t.id)}
+              className={cx('flex flex-col items-center gap-1 py-3 text-[11px] font-semibold', tab === t.id ? 'text-aws' : 'text-slate-500')}
+            >
+              <t.icon size={20} />
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      {unlocked && (
+        <div className="animate-rise fixed inset-x-4 bottom-24 z-40 mx-auto flex max-w-sm items-center gap-4 rounded-3xl bg-ink-3/95 p-4 shadow-2xl ring-1 ring-aws/40 backdrop-blur sm:bottom-8">
+          <BadgeMedallion p={unlocked} size="sm" />
+          <div>
+            <div className="text-xs font-bold uppercase tracking-widest text-aws">Badge unlocked!</div>
+            <div className="font-bold">{unlocked.badge.name}</div>
+          </div>
+        </div>
+      )}
+
+      <Onboarding
+        key={setupOpen ? 'rerun' : 'first'}
+        open={!state.onboarded || setupOpen}
+        state={state}
+        today={today}
+        onFinish={(next) => {
+          setState(next)
+          setSetupOpen(false)
+          go('today')
+        }}
+      />
     </div>
   )
 }

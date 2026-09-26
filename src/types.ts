@@ -25,11 +25,14 @@ export interface Article {
 
 export interface AppState {
   version: 1
+  onboarded: boolean
   startDate: string | null
   dayBoundary: DayBoundary
   reminderTime: string
   daily: Record<string, DayLog>
   quick: Record<string, boolean>
+  /** Day each quick win was ticked, so it stays visible as "done" in today's missions. */
+  quickOn: Record<string, string>
   community: Record<CommunityMetric, number>
   manualEarned: Record<string, boolean>
   articles: Article[]

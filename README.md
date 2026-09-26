@@ -12,28 +12,35 @@ Track all **21 AWS Builder Center badges** and see exactly when you unlock each 
 
 The voucher is not cash. The code is issued within 8 business days of claiming it and is valid for 6 months from the claim date.
 
-![Dashboard](docs/screenshot.png)
+![Today's missions](docs/screenshot.png)
 
 ## Why
 
 Several badges need unbroken 7, 30 and 90-day streaks, 4 consecutive weeks of activity, or engagement from other people.
 Missing a single day resets a streak, so the fastest path is to start every streak on day 1 and never break it. This app
-makes that routine visible and hard to forget.
+turns that into a short daily checklist and always tells you what to do next.
+
+## How it works
+
+1. **Set up in a minute**: first launch asks which badges you already have and your current streaks, so the tracker matches your Builder Center profile.
+2. **Today**: a prioritized mission list (daily streaks first, then quick wins, then weekly tasks). The next step is highlighted, and every mission shows which badges it counts toward.
+3. **Journey**: a map of all 21 badges across the 6 phases with progress, earliest-possible dates and details for each badge.
+4. **Toolkit**: an article planner, comment prompts that get replies, and Wish ideas.
+
+![Badge journey](docs/journey.png)
 
 ## Features
 
-- **Daily check-in**: log visit / like / comment in one tap, with a live "time left today" countdown and a warning when a streak is at risk.
-- **Automatic streaks**: current and best streak per activity, computed from your check-ins. The 7/30/90-day badges unlock by themselves.
-- **Weekly tasks**: Wish votes and article publishing tracked per ISO week (Mon–Sun) for the 4-week badges.
-- **All 21 badges** grouped into the 6 roadmap phases, each with its requirement, progress bar, earliest-possible date and a practical tip.
-- **Milestone projections**: the earliest date you can reach $10, $30 and the $100 voucher if you don't miss a day.
-- **90-day streak map**: heatmap of your challenge with the finish-line date. Click any day to backfill it.
-- **Community badge counters**: replies, Wish votes, and comments/articles with 10+ likes.
-- **Content planner**: plan weekly articles, mark them published (logs the weekly task) and track likes toward Valued Creator.
-- **Comment prompts & Wish ideas** you can copy with one click, written to start conversations.
-- **Calendar reminders**: download an `.ics` with a daily and a weekly reminder for Google/Outlook/Apple Calendar.
-- **Private by design**: data lives in your browser's `localStorage`. Export/import a JSON backup to move devices.
-- **Share progress**: copy a ready-made summary for LinkedIn or X.
+- **Today's missions** with a "time left today" countdown and a warning when streaks are at risk.
+- **Automatic streaks**: ticking a mission updates every 7/30/90-day and 4-week badge it feeds. Badges unlock with confetti.
+- **Reward track**: progress to $10, +$20 and the $100 voucher, with the earliest date you can reach each one.
+- **Badge details**: tap any badge for its requirement, progress, ETA, a tip, and "I already have this" to match your profile.
+- **90-day streak map**: tap a past day to fix a missed check-in.
+- **Community counters** for replies, Wish votes, and comments/articles with 10+ likes.
+- **Toolkit**: article planner (publishing logs the weekly mission, likes count toward Valued Creator), copyable comment prompts and Wish ideas.
+- **Calendar reminders** (`.ics`), JSON backup/restore, and a UTC or local day boundary.
+- **Private**: data stays in your browser's `localStorage`. No account, no server.
+- **Mobile-first**: bottom tab bar, bottom-sheet dialogs, linkable tabs (`#journey`, `#toolkit`, `#settings`).
 
 ## The 21 badges
 
@@ -46,11 +53,11 @@ makes that routine visible and hard to forget.
 | 5. Community | Conversation Starter (10 comments with replies), Idea Influencer (10 Wish votes), Meaningful Contributor (5 comments × 10 likes), Valued Creator (5 articles × 10 likes) |
 | 6. 90-day streaks | Visit, Like, Comment |
 
-Sources: [The complete roadmap to all 21 AWS Builder Center badges](https://builder.aws.com/content/3JJRhS6Hfh0Sf2ssvZLpQKai0xY/the-complete-roadmap-to-all-21-aws-builder-center-badges) , [A complete breakdown of all 21 badges](https://builder.aws.com/content/3IXWU6hpqCLsaXPfPr97QndERO0/a-complete-breakdown-of-all-21-aws-builder-center-badges), the [AWS Student Rewards announcement](https://builder.aws.com/content/3I1qkUtKhwU6K1VaGkfYRwtbz3o) and the [Builder Center FAQ](https://builder.aws.com/faq).
+Sources: [The complete roadmap to all 21 AWS Builder Center badges](https://builder.aws.com/content/3JJRhS6Hfh0Sf2ssvZLpQKai0xY/the-complete-roadmap-to-all-21-aws-builder-center-badges), [A complete breakdown of all 21 badges](https://builder.aws.com/content/3IXWU6hpqCLsaXPfPr97QndERO0/a-complete-breakdown-of-all-21-aws-builder-center-badges), the [AWS Student Rewards announcement](https://builder.aws.com/content/3I1qkUtKhwU6K1VaGkfYRwtbz3o) and the [Builder Center FAQ](https://builder.aws.com/faq).
 
 ## Tech stack
 
-React 19 + TypeScript + Vite + Tailwind CSS v4. No backend; it deploys as a static site on Vercel.
+React 19 + TypeScript + Vite + Tailwind CSS v4 + lucide icons. No backend; it deploys as a static site on Vercel.
 
 ## Run locally
 

@@ -1,67 +1,79 @@
-import type { ReactNode } from 'react'
+import { X } from 'lucide-react'
+import { useEffect, type ReactNode } from 'react'
 import { cx } from '../lib/cx'
 
 export function Card({ children, className }: { children: ReactNode; className?: string }) {
-  return (
-    <section className={cx('rounded-2xl border border-white/10 bg-ink-2/80 p-5 shadow-xl shadow-black/20 backdrop-blur', className)}>
-      {children}
-    </section>
-  )
+  return <section className={cx('card rounded-3xl p-5 sm:p-6', className)}>{children}</section>
 }
 
-export function CardTitle({ children, right }: { children: ReactNode; right?: ReactNode }) {
+export function SectionTitle({ children, hint, right }: { children: ReactNode; hint?: ReactNode; right?: ReactNode }) {
   return (
-    <div className="mb-4 flex items-center justify-between gap-3">
-      <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-300">{children}</h2>
+    <div className="mb-4 flex items-end justify-between gap-3">
+      <div>
+        <h2 className="text-lg font-bold tracking-tight">{children}</h2>
+        {hint && <p className="mt-0.5 text-sm text-slate-400">{hint}</p>}
+      </div>
       {right}
     </div>
   )
 }
 
-export function ProgressBar({ value, max, className }: { value: number; max: number; className?: string }) {
+export function ProgressBar({ value, max, className, tone = 'aws' }: { value: number; max: number; className?: string; tone?: 'aws' | 'emerald' }) {
   const pct = max === 0 ? 0 : Math.min(100, (value / max) * 100)
   return (
-    <div className={cx('h-2 w-full overflow-hidden rounded-full bg-white/10', className)}>
+    <div className={cx('h-2 w-full overflow-hidden rounded-full bg-white/[0.07]', className)}>
       <div
-        className="h-full rounded-full bg-linear-to-r from-aws to-amber-300 transition-all duration-500"
+        className={cx(
+          'h-full rounded-full transition-[width] duration-700 ease-out',
+          tone === 'aws' ? 'bg-linear-to-r from-aws to-amber-300' : 'bg-linear-to-r from-emerald-400 to-teal-300',
+        )}
         style={{ width: `${pct}%` }}
       />
     </div>
   )
 }
 
-export function Ring({ value, max, size = 168, children }: { value: number; max: number; size?: number; children?: ReactNode }) {
-  const stroke = 12
+export function Ring({
+  value,
+  max,
+  size = 64,
+  stroke = 7,
+  children,
+  color = '#ff9900',
+}: {
+  value: number
+  max: number
+  size?: number
+  stroke?: number
+  children?: ReactNode
+  color?: string
+}) {
   const r = (size - stroke) / 2
   const c = 2 * Math.PI * r
   const pct = max === 0 ? 0 : Math.min(1, value / max)
   return (
-    <div className="relative" style={{ width: size, height: size }}>
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="currentColor" strokeWidth={stroke} fill="none" className="text-white/10" />
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="rgb(255 255 255 / 0.08)" strokeWidth={stroke} fill="none" />
         <circle
           cx={size / 2}
           cy={size / 2}
           r={r}
-          stroke="url(#ring-gradient)"
+          stroke={color}
           strokeWidth={stroke}
           strokeLinecap="round"
           fill="none"
           strokeDasharray={c}
           strokeDashoffset={c * (1 - pct)}
-          className="transition-all duration-700"
+          className="transition-[stroke-dashoffset] duration-700 ease-out"
         />
-        <defs>
-          <linearGradient id="ring-gradient" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#ff9900" />
-            <stop offset="100%" stopColor="#fcd34d" />
-          </linearGradient>
-        </defs>
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">{children}</div>
     </div>
   )
 }
+
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
 
 export function Button({
   children,
@@ -74,17 +86,17 @@ export function Button({
 }: {
   children: ReactNode
   onClick?: () => void
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
+  variant?: ButtonVariant
   className?: string
   disabled?: boolean
   title?: string
   type?: 'button' | 'submit'
 }) {
-  const styles = {
-    primary: 'bg-aws text-ink font-semibold hover:bg-amber-400',
-    secondary: 'bg-white/10 text-slate-100 hover:bg-white/15',
-    ghost: 'text-slate-300 hover:bg-white/10 hover:text-white',
-    danger: 'bg-rose-500/15 text-rose-300 hover:bg-rose-500/25',
+  const styles: Record<ButtonVariant, string> = {
+    primary: 'bg-linear-to-r from-aws to-amber-400 text-ink font-semibold shadow-lg shadow-aws/25 hover:brightness-110',
+    secondary: 'bg-white/[0.07] text-slate-100 ring-1 ring-white/10 hover:bg-white/[0.12]',
+    ghost: 'text-slate-300 hover:bg-white/[0.07] hover:text-white',
+    danger: 'bg-rose-500/10 text-rose-300 ring-1 ring-rose-500/20 hover:bg-rose-500/20',
   }
   return (
     <button
@@ -93,7 +105,7 @@ export function Button({
       disabled={disabled}
       title={title}
       className={cx(
-        'inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm transition disabled:cursor-not-allowed disabled:opacity-40',
+        'inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40',
         styles[variant],
         className,
       )}
@@ -105,25 +117,63 @@ export function Button({
 
 export function Stepper({ value, onChange, min = 0 }: { value: number; onChange: (v: number) => void; min?: number }) {
   return (
-    <div className="inline-flex items-center overflow-hidden rounded-lg border border-white/10">
+    <div className="inline-flex items-center rounded-xl bg-white/[0.06] ring-1 ring-white/10">
       <button
         type="button"
         onClick={() => onChange(Math.max(min, value - 1))}
         disabled={value <= min}
-        className="px-2.5 py-1 text-slate-300 hover:bg-white/10 disabled:opacity-30"
+        className="h-8 w-8 rounded-l-xl text-lg leading-none text-slate-300 hover:bg-white/10 disabled:opacity-30"
         aria-label="Decrease"
       >
         −
       </button>
-      <span className="min-w-8 px-1 text-center text-sm font-semibold tabular-nums">{value}</span>
+      <span className="min-w-8 text-center text-sm font-bold tabular-nums">{value}</span>
       <button
         type="button"
         onClick={() => onChange(value + 1)}
-        className="px-2.5 py-1 text-slate-300 hover:bg-white/10"
+        className="h-8 w-8 rounded-r-xl text-lg leading-none text-slate-300 hover:bg-white/10"
         aria-label="Increase"
       >
         +
       </button>
+    </div>
+  )
+}
+
+export function Modal({ open, onClose, children, wide }: { open: boolean; onClose: () => void; children: ReactNode; wide?: boolean }) {
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    document.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
+  }, [open, onClose])
+
+  if (!open) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
+      <div className="animate-fade absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div
+        role="dialog"
+        aria-modal="true"
+        className={cx(
+          'animate-rise card relative max-h-[92vh] w-full overflow-y-auto rounded-t-3xl p-6 sm:rounded-3xl',
+          wide ? 'sm:max-w-2xl' : 'sm:max-w-md',
+        )}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-4 top-4 rounded-full p-1.5 text-slate-400 hover:bg-white/10 hover:text-white"
+          aria-label="Close"
+        >
+          <X size={18} />
+        </button>
+        {children}
+      </div>
     </div>
   )
 }

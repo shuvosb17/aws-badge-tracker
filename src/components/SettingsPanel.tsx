@@ -1,12 +1,20 @@
+import { BellRing, Download, RefreshCw, RotateCcw, Upload } from 'lucide-react'
 import { useRef, useState } from 'react'
 import type { Update } from '../lib/actions'
+import { cx } from '../lib/cx'
 import { buildReminderCalendar, downloadFile } from '../lib/ics'
 import { defaultState, normalizeState } from '../lib/storage'
 import type { AppState } from '../types'
-import { cx } from '../lib/cx'
-import { Button, Card, CardTitle } from './ui'
+import { Button, Card, SectionTitle } from './ui'
 
-export function SettingsPanel({ state, update, today }: { state: AppState; update: Update; today: string }) {
+interface Props {
+  state: AppState
+  update: Update
+  today: string
+  onRerunSetup: () => void
+}
+
+export function SettingsPanel({ state, update, today, onRerunSetup }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [message, setMessage] = useState<string | null>(null)
 
@@ -15,15 +23,10 @@ export function SettingsPanel({ state, update, today }: { state: AppState; updat
     setTimeout(() => setMessage(null), 3000)
   }
 
-  const exportData = () => {
-    downloadFile(`aws-badge-tracker-${today}.json`, JSON.stringify(state, null, 2), 'application/json')
-    flash('Backup downloaded.')
-  }
-
   const importData = async (file: File) => {
     try {
-      const parsed = normalizeState(JSON.parse(await file.text()))
-      update(() => parsed)
+      const restored = normalizeState(JSON.parse(await file.text()))
+      update(() => restored)
       flash('Backup restored.')
     } catch {
       flash('That file is not a valid tracker backup.')
@@ -31,107 +34,117 @@ export function SettingsPanel({ state, update, today }: { state: AppState; updat
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <Card>
-        <CardTitle>Challenge</CardTitle>
-        <label className="block text-sm">
-          <span className="text-slate-300">Start date</span>
-          <input
-            type="date"
-            value={state.startDate ?? ''}
-            max={today}
-            onChange={(e) => update((s) => ({ ...s, startDate: e.target.value || null }))}
-            className="mt-1 block w-full rounded-lg border border-white/10 bg-ink-3 px-3 py-2"
-          />
-        </label>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-extrabold tracking-tight sm:text-4xl">Settings</h1>
 
-        <div className="mt-5 text-sm">
-          <span className="text-slate-300">When does a day end?</span>
-          <div className="mt-2 grid grid-cols-2 gap-2">
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <SectionTitle hint="Tell the tracker which badges and streaks you already have">Sync with your profile</SectionTitle>
+          <Button variant="primary" onClick={onRerunSetup}>
+            <RefreshCw size={16} /> Re-run setup
+          </Button>
+          <label className="mt-5 block text-sm">
+            <span className="font-semibold text-slate-300">Challenge start date</span>
+            <input
+              type="date"
+              value={state.startDate ?? ''}
+              max={today}
+              onChange={(e) => update((s) => ({ ...s, startDate: e.target.value || null }))}
+              className="field mt-1.5"
+            />
+          </label>
+        </Card>
+
+        <Card>
+          <SectionTitle hint="AWS doesn't say which time zone streaks use">When does your day end?</SectionTitle>
+          <div className="grid grid-cols-2 gap-2">
             {(['local', 'utc'] as const).map((b) => (
               <button
                 key={b}
                 type="button"
                 onClick={() => update((s) => ({ ...s, dayBoundary: b }))}
                 className={cx(
-                  'rounded-lg border px-3 py-2 text-left',
-                  state.dayBoundary === b ? 'border-aws bg-aws/15' : 'border-white/10 bg-white/5 hover:border-white/25',
+                  'rounded-2xl p-3.5 text-left ring-1 transition',
+                  state.dayBoundary === b ? 'bg-aws/10 ring-aws/50' : 'bg-white/[0.03] ring-white/10 hover:ring-white/25',
                 )}
               >
                 <div className="font-semibold">{b === 'local' ? 'Local midnight' : 'UTC midnight'}</div>
-                <div className="text-xs text-slate-400">{b === 'local' ? 'Your device time zone' : 'Safer if unsure how AWS counts days'}</div>
+                <div className="mt-0.5 text-xs text-slate-400">{b === 'local' ? 'Your device time zone' : 'Safer if you\'re unsure'}</div>
               </button>
             ))}
           </div>
-          <p className="mt-2 text-xs text-slate-500">
-            AWS doesn't document which time zone streaks use. Doing your activities at the same time every day keeps you safe
-            either way.
-          </p>
-        </div>
-      </Card>
+          <p className="mt-3 text-xs text-slate-500">Doing your missions at the same time every day keeps you safe either way.</p>
+        </Card>
 
-      <Card>
-        <CardTitle>Reminders</CardTitle>
-        <p className="text-sm text-slate-400">
-          Add a daily reminder (visit, like, comment) and a weekly reminder (article + Wish vote) to Google Calendar, Outlook or
-          Apple Calendar.
-        </p>
-        <div className="mt-4 flex flex-wrap items-end gap-3">
-          <label className="text-sm">
-            <span className="text-slate-300">Reminder time</span>
+        <Card>
+          <SectionTitle hint="Daily and weekly reminders for Google, Outlook or Apple Calendar">Never miss a day</SectionTitle>
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="text-sm">
+              <span className="font-semibold text-slate-300">Remind me at</span>
+              <input
+                type="time"
+                value={state.reminderTime}
+                onChange={(e) => update((s) => ({ ...s, reminderTime: e.target.value || '20:00' }))}
+                className="field mt-1.5 w-36"
+              />
+            </label>
+            <Button
+              variant="primary"
+              onClick={() => {
+                downloadFile('aws-badge-reminders.ics', buildReminderCalendar(today, state.reminderTime), 'text/calendar')
+                flash('Calendar file downloaded. Open it to add the reminders.')
+              }}
+            >
+              <BellRing size={16} /> Add to calendar
+            </Button>
+          </div>
+        </Card>
+
+        <Card>
+          <SectionTitle hint="Stored only in this browser. Back up to move devices.">Your data</SectionTitle>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={() => {
+                downloadFile(`aws-badge-tracker-${today}.json`, JSON.stringify(state, null, 2), 'application/json')
+                flash('Backup downloaded.')
+              }}
+            >
+              <Download size={16} /> Back up
+            </Button>
+            <Button onClick={() => fileRef.current?.click()}>
+              <Upload size={16} /> Restore
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                if (confirm('Reset all progress? This cannot be undone unless you have a backup.')) {
+                  update(() => defaultState())
+                  flash('Progress reset.')
+                }
+              }}
+            >
+              <RotateCcw size={16} /> Reset
+            </Button>
             <input
-              type="time"
-              value={state.reminderTime}
-              onChange={(e) => update((s) => ({ ...s, reminderTime: e.target.value || '20:00' }))}
-              className="mt-1 block rounded-lg border border-white/10 bg-ink-3 px-3 py-2"
+              ref={fileRef}
+              type="file"
+              accept="application/json"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                if (f) importData(f)
+                e.target.value = ''
+              }}
             />
-          </label>
-          <Button
-            variant="primary"
-            onClick={() => {
-              downloadFile('aws-badge-reminders.ics', buildReminderCalendar(today, state.reminderTime), 'text/calendar')
-              flash('Calendar file downloaded. Open it to add the reminders.')
-            }}
-          >
-            Download calendar reminders (.ics)
-          </Button>
-        </div>
-      </Card>
+          </div>
+        </Card>
+      </div>
 
-      <Card className="md:col-span-2">
-        <CardTitle>Your data</CardTitle>
-        <p className="text-sm text-slate-400">
-          Everything is stored in this browser only. There's no account and nothing is sent to a server. Download a backup to move
-          your progress to another device.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Button onClick={exportData}>Download backup (.json)</Button>
-          <Button onClick={() => fileRef.current?.click()}>Restore from backup</Button>
-          <Button
-            variant="danger"
-            onClick={() => {
-              if (confirm('Reset all progress? This cannot be undone unless you have a backup.')) {
-                update(() => defaultState())
-                flash('Progress reset.')
-              }
-            }}
-          >
-            Reset everything
-          </Button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="application/json"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0]
-              if (f) importData(f)
-              e.target.value = ''
-            }}
-          />
+      {message && (
+        <div className="animate-rise fixed bottom-24 left-1/2 z-40 -translate-x-1/2 rounded-2xl bg-ink-3 px-4 py-3 text-sm font-medium shadow-2xl ring-1 ring-white/10 sm:bottom-8">
+          {message}
         </div>
-        {message && <p className="mt-3 text-sm text-aws">{message}</p>}
-      </Card>
+      )}
     </div>
   )
 }

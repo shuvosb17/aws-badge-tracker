@@ -1,118 +1,114 @@
+import { useState } from 'react'
+import { setActivity, type Update } from '../lib/actions'
 import { cx } from '../lib/cx'
 import { addDays, diffDays, formatKey, weekKey } from '../lib/date'
-import { dailyStreak } from '../lib/progress'
-import type { AppState, DailyMetric } from '../types'
-import { Card, CardTitle, ProgressBar } from './ui'
+import type { ActivityMetric, AppState } from '../types'
+import { BadgeIcon } from './icons'
+import { Card, SectionTitle } from './ui'
 
 const WEEKS = 13
-const LEVELS = ['bg-white/5', 'bg-aws/30', 'bg-aws/60', 'bg-aws']
-const WEEKDAYS = ['Mon', '', 'Wed', '', 'Fri', '', 'Sun']
-const METRICS: { metric: DailyMetric; label: string }[] = [
+const LEVELS = ['bg-white/[0.05]', 'bg-aws/30', 'bg-aws/60', 'bg-linear-to-br from-aws to-amber-300']
+const WEEKDAYS = ['M', '', 'W', '', 'F', '', 'S']
+const EDITABLE: { metric: ActivityMetric; label: string }[] = [
   { metric: 'visit', label: 'Visit' },
   { metric: 'like', label: 'Like' },
   { metric: 'comment', label: 'Comment' },
+  { metric: 'vote', label: 'Wish vote' },
+  { metric: 'publish', label: 'Article' },
 ]
 
-interface Props {
-  state: AppState
-  today: string
-  selected: string
-  onSelect: (d: string) => void
-}
-
-export function Heatmap({ state, today, selected, onSelect }: Props) {
+export function Heatmap({ state, update, today }: { state: AppState; update: Update; today: string }) {
+  const [selected, setSelected] = useState<string | null>(null)
   const anchor =
     state.startDate && diffDays(state.startDate, today) < WEEKS * 7 - 7 ? state.startDate : addDays(today, -(WEEKS - 1) * 7)
   const first = weekKey(anchor)
   const end90 = state.startDate ? addDays(state.startDate, 89) : null
-  const daysLeft = end90 ? Math.max(0, diffDays(today, end90)) : null
-
-  const perfectDays = Object.values(state.daily).filter((d) => d?.visit && d?.like && d?.comment).length
+  const perfect = Object.values(state.daily).filter((d) => d?.visit && d?.like && d?.comment).length
+  const log = selected ? (state.daily[selected] ?? {}) : {}
 
   return (
     <Card>
-      <CardTitle right={<span className="text-xs text-slate-400">{perfectDays} perfect days</span>}>90-day streak map</CardTitle>
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        <div>
-          <div
-            className="grid gap-1 sm:gap-1.5"
-            style={{ gridTemplateColumns: `auto repeat(${WEEKS}, minmax(0, 1fr))`, gridTemplateRows: 'repeat(7, auto)', gridAutoFlow: 'column' }}
-          >
-            {WEEKDAYS.map((d, i) => (
-              <span key={i} className="flex items-center pr-1 text-[10px] text-slate-500">
-                {d}
-              </span>
-            ))}
-            {Array.from({ length: WEEKS * 7 }, (_, i) => {
-              const key = addDays(first, i)
-              const log = state.daily[key] ?? {}
-              const count = (log.visit ? 1 : 0) + (log.like ? 1 : 0) + (log.comment ? 1 : 0)
-              const future = key > today
-              const inChallenge = !!(state.startDate && end90 && key >= state.startDate && key <= end90)
+      <SectionTitle
+        hint="Click a past day to fix a missed check-in"
+        right={<span className="rounded-full bg-aws/10 px-2.5 py-1 text-xs font-bold text-aws">{perfect} perfect days</span>}
+      >
+        90-day streak map
+      </SectionTitle>
+
+      <div
+        className="grid max-w-3xl gap-1 sm:gap-1.5"
+        style={{ gridTemplateColumns: `auto repeat(${WEEKS}, minmax(0, 1fr))`, gridTemplateRows: 'repeat(7, auto)', gridAutoFlow: 'column' }}
+      >
+        {WEEKDAYS.map((d, i) => (
+          <span key={i} className="flex items-center pr-1 text-[10px] font-semibold text-slate-500">
+            {d}
+          </span>
+        ))}
+        {Array.from({ length: WEEKS * 7 }, (_, i) => {
+          const key = addDays(first, i)
+          const l = state.daily[key] ?? {}
+          const count = (l.visit ? 1 : 0) + (l.like ? 1 : 0) + (l.comment ? 1 : 0)
+          const future = key > today
+          const inChallenge = !!(state.startDate && end90 && key >= state.startDate && key <= end90)
+          return (
+            <button
+              key={key}
+              type="button"
+              disabled={future}
+              onClick={() => setSelected(key === selected ? null : key)}
+              title={`${formatKey(key, { weekday: 'short', month: 'short', day: 'numeric' })}: ${count}/3`}
+              className={cx(
+                'relative aspect-square w-full max-w-9 rounded-md transition',
+                future ? (inChallenge ? 'border border-dashed border-white/15' : 'bg-white/[0.02]') : LEVELS[count],
+                !future && 'hover:scale-110',
+                key === selected && 'ring-2 ring-white',
+                key === today && key !== selected && 'ring-2 ring-aws/70',
+              )}
+            >
+              {(l.vote || l.publish) && <span className="absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-sky-300" />}
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-slate-400">
+        <span className="flex items-center gap-1">
+          Less {LEVELS.map((l) => <span key={l} className={cx('h-3 w-3 rounded-sm', l)} />)} More
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="h-1.5 w-1.5 rounded-full bg-sky-300" /> Wish vote / article
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="h-3 w-3 rounded-sm border border-dashed border-white/25" /> Days left in your 90
+        </span>
+      </div>
+
+      {selected && (
+        <div className="animate-rise mt-4 rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10">
+          <div className="mb-3 text-sm font-semibold">
+            {formatKey(selected, { weekday: 'long', month: 'long', day: 'numeric' })}
+            <span className="ml-2 font-normal text-slate-400">What did you do on Builder Center?</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {EDITABLE.map(({ metric, label }) => {
+              const on = !!log[metric]
               return (
                 <button
-                  key={key}
+                  key={metric}
                   type="button"
-                  disabled={future}
-                  onClick={() => onSelect(key)}
-                  title={`${formatKey(key, { weekday: 'short', month: 'short', day: 'numeric' })}: ${count}/3${log.vote ? ' · voted' : ''}${log.publish ? ' · published' : ''}`}
+                  onClick={() => update((s) => setActivity(s, selected, metric, !on))}
                   className={cx(
-                    'relative aspect-square w-full max-w-10 rounded-[5px] transition',
-                    future ? (inChallenge ? 'border border-dashed border-white/15' : 'bg-white/[0.02]') : LEVELS[count],
-                    !future && 'hover:ring-2 hover:ring-white/40',
-                    key === selected && 'ring-2 ring-white',
-                    key === today && key !== selected && 'ring-1 ring-aws',
+                    'inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium ring-1 transition',
+                    on ? 'bg-aws/15 text-aws ring-aws/40' : 'bg-white/[0.03] text-slate-300 ring-white/10 hover:ring-white/25',
                   )}
                 >
-                  {(log.vote || log.publish) && <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-sky-300" />}
+                  <BadgeIcon name={metric} size={15} /> {label}
                 </button>
               )
             })}
           </div>
-          <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-slate-400">
-            <span className="flex items-center gap-1">
-              Less {LEVELS.map((l) => <span key={l} className={cx('h-3 w-3 rounded-sm', l)} />)} More
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-sky-300" /> Wish vote / article
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="h-3 w-3 rounded-sm border border-dashed border-white/25" /> Remaining challenge days
-            </span>
-            <span>Click a day to edit it</span>
-          </div>
         </div>
-
-        <div className="space-y-4">
-          {METRICS.map(({ metric, label }) => {
-            const s = dailyStreak(state, metric, today)
-            return (
-              <div key={metric}>
-                <div className="mb-1 flex items-baseline justify-between text-sm">
-                  <span className="font-medium">{label} streak</span>
-                  <span className="text-xs text-slate-400">
-                    <span className="font-semibold text-aws">{s.current}</span>/90 · best {s.longest}
-                  </span>
-                </div>
-                <ProgressBar value={s.current} max={90} />
-              </div>
-            )
-          })}
-          <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
-            {end90 ? (
-              <>
-                <div className="text-slate-400">90-day finish line</div>
-                <div className="text-lg font-semibold">{formatKey(end90, { month: 'long', day: 'numeric', year: 'numeric' })}</div>
-                <div className="text-xs text-slate-400">
-                  {daysLeft === 0 ? "You're there!" : `${daysLeft} days to go if you don't miss a day`}
-                </div>
-              </>
-            ) : (
-              <div className="text-slate-400">Set a start date to see your 90-day finish line.</div>
-            )}
-          </div>
-        </div>
-      </div>
+      )}
     </Card>
   )
 }

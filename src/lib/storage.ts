@@ -6,11 +6,13 @@ const STORAGE_KEY = 'aws-badge-tracker:v1'
 export function defaultState(): AppState {
   return {
     version: 1,
+    onboarded: false,
     startDate: null,
     dayBoundary: 'local',
     reminderTime: '20:00',
     daily: {},
     quick: {},
+    quickOn: {},
     community: {
       commentsWithReplies: 0,
       wishVotesReceived: 0,
@@ -26,13 +28,16 @@ export function normalizeState(raw: unknown): AppState {
   const base = defaultState()
   if (!raw || typeof raw !== 'object') return base
   const r = raw as Partial<AppState>
+  const hasData = !!r.startDate || Object.keys(r.daily ?? {}).length > 0
   return {
     ...base,
     ...r,
     version: 1,
+    onboarded: r.onboarded ?? hasData,
     community: { ...base.community, ...(r.community ?? {}) },
     daily: r.daily ?? {},
     quick: r.quick ?? {},
+    quickOn: r.quickOn ?? {},
     manualEarned: r.manualEarned ?? {},
     articles: Array.isArray(r.articles) ? r.articles : [],
   }
