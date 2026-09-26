@@ -1,5 +1,7 @@
 # AWS Badge Tracker
 
+**Live app: [aws-badge-tracker.vercel.app](https://aws-badge-tracker.vercel.app)**
+
 Track all **21 AWS Builder Center badges** and see exactly when you unlock each Student Rewards milestone:
 
 | Badges | Reward |
