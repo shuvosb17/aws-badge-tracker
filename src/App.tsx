@@ -131,8 +131,9 @@ export default function App() {
 
       <footer className="mx-auto max-w-6xl px-4 pb-10 pt-4 text-xs text-slate-500">
         <p>
-          Rewards: 7 badges = $10 AWS Credits · 14 badges = +$20 AWS Credits · 21 badges = $100 AWS Foundational Certification exam
-          voucher (not cash). Based on the{' '}
+          Rewards for verified students: 7 badges = $10 AWS Credits · 14 badges = +$20 AWS Credits · 21 badges = $100 exam voucher
+          for AWS Certified Cloud Practitioner or AI Practitioner (not cash; code issued within 8 business days of claiming, valid
+          6 months from the claim date). Based on the{' '}
           <a
             className="text-slate-400 underline hover:text-aws"
             href="https://builder.aws.com/content/3JJRhS6Hfh0Sf2ssvZLpQKai0xY/the-complete-roadmap-to-all-21-aws-builder-center-badges"
@@ -149,6 +150,10 @@ export default function App() {
             rel="noreferrer"
           >
             Student Rewards announcement
+          </a>{' '}
+          and the{' '}
+          <a className="text-slate-400 underline hover:text-aws" href="https://builder.aws.com/faq" target="_blank" rel="noreferrer">
+            Builder Center FAQ
           </a>
           . Unofficial tool, not affiliated with AWS. Always confirm badge status on your Builder Center profile.
         </p>

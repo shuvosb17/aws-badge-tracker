@@ -16,9 +16,8 @@ export const BADGES: Badge[] = [
     name: 'Knowledge Seeker',
     phase: 1,
     kind: 'quick',
-    autoFrom: 'visit',
-    requirement: 'Read or explore Builder Center content.',
-    tip: 'Open any article on builder.aws.com and read it through.',
+    requirement: 'Read 10 different articles on Builder Center.',
+    tip: 'Read one or two articles during each daily visit and you\'ll have 10 within a week (or do all 10 today).',
   },
   {
     id: 'hello-world',
@@ -26,8 +25,8 @@ export const BADGES: Badge[] = [
     name: 'Hello, World!',
     phase: 1,
     kind: 'quick',
-    requirement: 'Complete your Builder Center profile.',
-    tip: 'Fill in bio, location, interests and social links. Every field counts.',
+    requirement: 'Complete the About section of your Builder Center profile.',
+    tip: 'Together with your profile photo, this also unlocks the 12-month Skill Builder premium welcome reward.',
   },
   {
     id: 'photo-finisher',
@@ -36,7 +35,7 @@ export const BADGES: Badge[] = [
     phase: 1,
     kind: 'quick',
     requirement: 'Upload a profile photo.',
-    tip: 'A clear headshot also makes people more likely to reply to your comments.',
+    tip: 'Required for the Skill Builder welcome reward. A clear headshot also gets more replies to your comments.',
   },
   {
     id: 'discussion-debut',
@@ -54,7 +53,7 @@ export const BADGES: Badge[] = [
     name: 'First Wish',
     phase: 1,
     kind: 'quick',
-    requirement: 'Submit your first Wish.',
+    requirement: 'Publish your first item on the AWS Wishlist.',
     tip: 'Pick something other builders want too. It feeds the Idea Influencer badge later.',
   },
   {
@@ -75,7 +74,7 @@ export const BADGES: Badge[] = [
     kind: 'streak',
     metric: 'visit',
     target: 7,
-    requirement: 'Visit Builder Center 7 days in a row.',
+    requirement: 'Visit Builder Center while signed in, 7 days in a row.',
     tip: 'Bookmark builder.aws.com and open it at the same time every day.',
   },
   {
@@ -103,18 +102,18 @@ export const BADGES: Badge[] = [
   {
     id: 'wish-vote-4w',
     num: 10,
-    name: '4-Week Wish Vote',
+    name: '4-Week Wish Vote Streak',
     phase: 3,
     kind: 'weekly',
     metric: 'vote',
     target: 4,
     requirement: 'Vote on a Wish once per week for 4 consecutive weeks.',
-    tip: 'Pick a fixed day (e.g. every Monday) so you never skip a week.',
+    tip: 'Use the same weekday every week (e.g. Monday). That works whichever day AWS starts its week on.',
   },
   {
     id: 'article-4w',
     num: 11,
-    name: '4-Week Article Publishing',
+    name: '4-Week Article Publishing Streak',
     phase: 3,
     kind: 'weekly',
     metric: 'publish',
@@ -130,7 +129,7 @@ export const BADGES: Badge[] = [
     kind: 'streak',
     metric: 'visit',
     target: 30,
-    requirement: 'Visit Builder Center 30 days in a row.',
+    requirement: 'Visit Builder Center while signed in, 30 days in a row.',
     tip: 'Same routine as the 7-day streak. Just don\'t break it.',
   },
   {
@@ -174,7 +173,7 @@ export const BADGES: Badge[] = [
     kind: 'community',
     metric: 'wishVotesReceived',
     target: 10,
-    requirement: 'Your Wishes receive 10 total votes.',
+    requirement: 'Get 10 votes on your Wishes.',
     tip: 'Submit Wishes that solve pain points many AWS users share.',
   },
   {
@@ -207,7 +206,7 @@ export const BADGES: Badge[] = [
     kind: 'streak',
     metric: 'visit',
     target: 90,
-    requirement: 'Visit Builder Center 90 days in a row.',
+    requirement: 'Visit Builder Center while signed in, 90 days in a row.',
     tip: 'This is the long pole. Every missed day resets the clock.',
   },
   {
@@ -237,7 +236,7 @@ export const BADGES: Badge[] = [
 export const MILESTONES = [
   { badges: 7, reward: '$10 AWS Credits', short: '$10' },
   { badges: 14, reward: '+$20 AWS Credits ($30 total)', short: '+$20' },
-  { badges: 21, reward: '$100 AWS Foundational Certification exam voucher', short: '$100' },
+  { badges: 21, reward: '$100 exam voucher (Cloud Practitioner or AI Practitioner)', short: '$100' },
 ] as const
 
 export const COMMUNITY_LABELS: Record<string, string> = {

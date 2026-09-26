@@ -8,7 +8,9 @@ Track all **21 AWS Builder Center badges** and see exactly when you unlock each 
 | --- | --- |
 | 7 | $10 AWS Credits |
 | 14 | +$20 AWS Credits ($30 total) |
-| 21 | **$100 AWS Foundational Certification exam voucher** |
+| 21 | **$100 exam voucher** for AWS Certified Cloud Practitioner or AI Practitioner |
+
+The voucher is not cash. The code is issued within 8 business days of claiming it and is valid for 6 months from the claim date.
 
 ![Dashboard](docs/screenshot.png)
 
@@ -37,14 +39,14 @@ makes that routine visible and hard to forget.
 
 | Phase | Badges |
 | --- | --- |
-| 1. Quick wins | Knowledge Seeker, Hello World!, Photo Finisher, Discussion Debut, First Wish, First Article |
-| 2. 7-day streaks | Visit, Like, Comment |
-| 3. 4-week activities | Wish Vote, Article Publishing |
+| 1. Quick wins | Knowledge Seeker (read 10 articles), Hello, World! (About section), Photo Finisher, Discussion Debut, First Wish, First Article |
+| 2. 7-day streaks | Visit (signed in), Like, Comment |
+| 3. 4-week streaks | Wish Vote Streak, Article Publishing Streak |
 | 4. 30-day streaks | Visit, Like, Comment |
 | 5. Community | Conversation Starter (10 comments with replies), Idea Influencer (10 Wish votes), Meaningful Contributor (5 comments × 10 likes), Valued Creator (5 articles × 10 likes) |
 | 6. 90-day streaks | Visit, Like, Comment |
 
-Sources: [The complete roadmap to all 21 AWS Builder Center badges](https://builder.aws.com/content/3JJRhS6Hfh0Sf2ssvZLpQKai0xY/the-complete-roadmap-to-all-21-aws-builder-center-badges) and the [AWS Student Rewards announcement](https://builder.aws.com/content/3I1qkUtKhwU6K1VaGkfYRwtbz3o).
+Sources: [The complete roadmap to all 21 AWS Builder Center badges](https://builder.aws.com/content/3JJRhS6Hfh0Sf2ssvZLpQKai0xY/the-complete-roadmap-to-all-21-aws-builder-center-badges) , [A complete breakdown of all 21 badges](https://builder.aws.com/content/3IXWU6hpqCLsaXPfPr97QndERO0/a-complete-breakdown-of-all-21-aws-builder-center-badges), the [AWS Student Rewards announcement](https://builder.aws.com/content/3I1qkUtKhwU6K1VaGkfYRwtbz3o) and the [Builder Center FAQ](https://builder.aws.com/faq).
 
 ## Tech stack
 
